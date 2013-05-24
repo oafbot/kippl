@@ -1,0 +1,7 @@
+*.pyc
+*.json
+*.csv
+*.txt
+.DS_Store
+
+test.py
