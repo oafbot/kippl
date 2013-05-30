@@ -24,7 +24,9 @@ if __name__ == "__main__":
     """Initialize keywords and search."""
     keywords = Keywords()
     # SearchTwitterREST(keywords, bot)
-    SearchTwitterStream(keywords.allwords)
+    #SearchTwitterStream(keywords.allwords)
     
-    # from test import Test
-    # test=Test(bot, "lack of focus")
+    # bot.GetFriends("oafbot")
+    
+    from test import Test
+    test=Test(bot)

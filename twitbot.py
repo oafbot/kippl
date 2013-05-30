@@ -1,6 +1,6 @@
 import twitter
 import time, sys
-from urllib2 import URLError
+from urllib2 import URLError, HTTPError
 
 class TwitBot:
     def __init__(self, user, consumer_key, consumer_secret, access_token_key, access_token_secret):
@@ -25,9 +25,9 @@ class TwitBot:
         pages=15
         
         for page in range(1, pages+1):
-            next = self.api.GetSearch(term=term, per_page=count, page=page, until=until, 
+            next = self.api.GetSearch(term=term, count=count, until=until, 
                                       since_id=since_id, max_id=max_id, include_entities=True)
-            print "tweets:", len(next), "\tpage:", page
+            # print "tweets:", len(next), "\tpage:", page
             
             if(len(next)>80):
                 results += next
@@ -51,7 +51,31 @@ class TwitBot:
                 break;
         return results
         
-    
+    def GetFriends(self, username, max_ids=100):
+        import functools
+        if not username: username = self.user
+        cursor = -1
+        ids = []
+        count = 0
+        while cursor != 0:
+            # response = self.Request(self.api.GetFriends, screen_name=username)
+            reponse = self.api.GetFriends(screen_name=username)
+            # for r in response: print r
+            if not response is None and count < len(response):
+                print response[count].id
+                ids.append(response[count].id)
+                count += 1
+                print >> sys.stderr, 'Fetched %i total ids for %s' % (len(ids), username)
+            else:
+                break
+            if len(ids) >= max_ids:
+                break
+        print ids
+        
+    def GetFollowers():
+        import functools
+        
+        
     def HandleError(self, e, wait=2):
         if wait > 3600:
             print >> sys.stderr, "Too many retries. Exiting."
