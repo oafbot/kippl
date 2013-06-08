@@ -18,6 +18,32 @@ class TwitBot:
     def Timeline(self, user, since=None, maxid=None, count=None):
         timeline = self.api.GetUserTimeline(screen_name=user, since_id=since, max_id=maxid, count=count)
         return timeline
+    
+    def Since(self, user, since=None):
+        results = []
+        not_end_of_time=True
+        while not_end_of_time:
+            timeline = self.Request(self.Timeline, self, user, since=since, count=200)
+            since = timeline[0].id
+            if len(timeline) <= 10:
+                not_end_of_time=False
+            results += timeline
+        return results
+        
+    def History(self, user):
+        maxid = None
+        results = []
+        more=True
+        while more:
+            timeline = self.Request(self.Timeline, self, user, maxid=maxid, count=200)
+            if timeline:
+                maxid = timeline[len(timeline)-1].id
+                results += timeline
+                if len(timeline) <= 10: 
+                    more=False
+            else:
+                more=False
+        return results
         
     def Search(self, term=None, since_id=None, max_id=None, until=None, 
                count=15, page=1, lang=None, geocode=None):
@@ -148,3 +174,12 @@ class TwitBot:
 
     def LoadTweetIds(self):
         return self.Unserialize("inputs/latest_tweets.p")
+
+    def GetListMembers(self, list_slug, owner_id, cursor=-1):
+        # mostly copied from the GetFriends method in
+        # https://github.com/bear/python-twitter/blob/master/twitter.py
+        url = '%s/lists/members.json' % (bot.api.base_url)
+        parameters = {"cursor":cursor, "slug":list_slug, "owner_id": owner_id}
+        json = bot.api._FetchUrl(url, parameters=parameters)
+        data = bot.api._ParseAndCheckTwitter(json)
+        return [twitter.User.NewFromJsonDict(x) for x in data['users']]
