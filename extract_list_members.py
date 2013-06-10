@@ -23,7 +23,7 @@ auth.set_access_token(config.access_token_key, config.access_token_secret)
 api = tweepy.API(auth) # Don't forget to use authentication for private lists/users.
 
 from couch import Couch
-couch = Couch()
+couch = Couch(db="diabetes")
 
 users=[]
 #SSEMt

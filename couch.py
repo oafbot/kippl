@@ -1,15 +1,17 @@
 import couchdb
 import json
 import sys
+import time
 from couchdb.design import ViewDefinition
 from inputs.config import Config
 
 class Couch:
-    def __init__(self, user=None, dbname='tweets-public-timeline'): 
+    def __init__(self, user=None, db=None): 
         self.config = Config()
         self.user = user if user else self.config.user
         self.server = couchdb.Server(self.config.couchdb_host)
-        self.dbname = dbname
+        self.dbname = db if db else "db_"+str(time.time())
+        
         try:
             self.db = self.server.create(self.dbname)
         except couchdb.http.PreconditionFailed, e:
@@ -22,73 +24,100 @@ class Couch:
             dump.append(d.AsDict())
         self.db.update(dump, all_or_nothing=True)
         # json_data=json.dumps(data, default=lambda o: o.__dict__)
-    
-    def Select(self, index, **kwargs):
-        try:
-            result = [t for t in self.db.view('index/'+index, **kwargs)]
-        except IndexError, e:
-            result = []
-        return result
-    
+        
     def Index(self, index, path):
         key = "".join(["['"+obj+"']" for obj in path.split(".")])
         mapper = 'def '+index+'(doc): yield (doc'+key+', doc)'
         view = ViewDefinition('index', index, mapper, language='python')
         view.sync(self.db)
-                
-    def IndexUser(self, username=None):
-        def user_mapper(doc):
-            yield (doc['user']['screen_name'], doc)
 
-        view = ViewDefinition('index', 'user', user_mapper, language='python')
-        view.sync(self.db)
+    def SelectIndex(self, index, **kwargs):
+        """ 
+        kwargs are as follows:
+        descending:     If true, return documents in descending key order.
+        endkey:         Stop returning records when the specified key is reached.
+        endkey_docid:   Stop returning records when the specified document ID is reached.
+        group:          If true, group the results using the reduce function to a group or single row.
+        group_level:    Description Specify the group level to be used.
+        include_docs:   If true, include the full content of the documents in the response.
+        inclusive_end:  If true, includes specified end key in the result.
+        key:            Return only documents that match the specified key.
+        limit:          Limit the number of the returned documents to the specified number.
+        reduce:         If true, use the reduction function.
+        skip:           Skip this number of records before starting to return the results.
+        stale:          Allow the results from a stale view to be used.
+        startkey:       Return records starting with the specified key
+        startkey_docid: Return records starting with the specified document ID.
+        update_seq:     If true, include the update sequence in the generated results.
+        """
         try:
-            result = [twid for twid in self.db.view('index/user', key=username)]
+            result = [t.value for t in self.db.view('index/'+index, **kwargs)]
         except IndexError, e:
             result = []
         return result
+        
+    def Select(self, index, **kwargs):
+        if type(index) is list:
+            name = ""
+            name += "_and_".join(["_".join([obj for obj in i.split(".")]) for i in index])
+            mapper = 'def '+name+'(doc): yield (['+",".join(["doc"+"".join(["['"+obj+"']" 
+                         for obj in i.split(".")]) for i in index])+'] , doc)'
+        else:
+            name = str("_".join([obj for obj in index.split(".")]))
+            key = "".join(["['"+obj+"']" for obj in index.split(".")])
+            mapper = 'def '+name+'(doc): yield (doc'+key+', doc)'
+        
+        view = ViewDefinition('index', name, mapper, language='python')
+        view.sync(self.db)
+        
+        return self.SelectIndex(name, **kwargs)
     
-    def IndexId(self, twid=None):
-        def tweet_mapper(doc):
-            yield (doc['id'], doc)
-
-        view = ViewDefinition('index', 'tweet', tweet_mapper, language='python')
+    def Distinct(self, index, **kwargs):
+        name = "distinct_"+str("_".join([obj for obj in index.split(".")]))
+        key = "".join(["['"+obj+"']" for obj in index.split(".")])
+        mapper  = 'def '+name+'(doc): yield (doc'+key+', doc'+key+')'
+        # reducer = 'def '+name+'_reduce(keys, values, rereduce): return values'
+        
+        view = ViewDefinition('index', name, mapper, language='python')
         view.sync(self.db)
-        try:
-            result = [t for t in self.db.view('index/tweet', key=twid)]
-        except IndexError, e:
-            result = []
-        return result
-                
-    def MaxTweetId(self):
-        def id_mapper(doc):
-            yield (doc['user']['screen_name'], doc['id'])
-
-        def max_tweet_reduce(keys, values, rereduce):
+        return list(set(self.SelectIndex(name, **kwargs)))
+        
+    def Count(self, index, **kwargs):
+        return len(self.Select(index, **kwargs))
+    
+    def Sum(self, index, **kwargs):
+        pass
+    
+    def Avg(self, index, **kwargs):
+        pass
+        
+    def Max(self, index, path=None):
+        key = "".join(["['"+obj+"']" for obj in path.split(".")])
+        mapper = 'def max_'+index+'(doc): yield (None, doc'+key+')'
+        
+        def max_reduce(keys, values, rereduce):
             return max(values)
-
-        view = ViewDefinition('index', 'max_tweet_id', id_mapper, max_tweet_reduce, language='python')
+        
+        view = ViewDefinition('index', 'max_'+index, mapper, max_reduce, language='python')
         view.sync(self.db)
         try:
-            since = int([twid for twid in self.db.view('index/max_tweet_id')][0].value)
+            return [twid for twid in self.db.view('index/max_'+index)][0].value
         except IndexError, e:
-            since = 1
-        return since
+            return 0
+    
+    def Min(self, index, path=None):
+        key = "".join(["['"+obj+"']" for obj in path.split(".")])
+        mapper = 'def min_'+index+'(doc): yield (None, doc'+key+')'
 
-    def MinTweetId(self):
-        def id_mapper(doc):
-            yield (None, doc['id'])
-
-        def min_tweet_reduce(keys, values):
+        def min_reduce(keys, values, rereduce):
             return min(values)
 
-        view = ViewDefinition('index', 'min_tweet_id', id_mapper, min_tweet_reduce, language='python')
-        view.sync(self.db) 
+        view = ViewDefinition('index', 'min_'+index, mapper, min_reduce, language='python')
+        view.sync(self.db)
         try:
-            since = int([twid for twid in self.db.view('index/min_tweet_id')][0].value)
+            return [twid for twid in self.db.view('index/min_'+index)][0].value
         except IndexError, e:
-            since = 1
-        return since
+            return 0                
         
     def DumpTweets(self, user='all', retweets=False, mentions=False):
         def tweets_text_dump(doc):
@@ -113,17 +142,13 @@ class Couch:
             dump += [txt for txt in self.db.view('dump/'+user)][0].value
             
         return dump
-    
+
+    def IndexUsers(self, username=None):
+        self.couch.Index('user', 'user.screen_name')
+
+    def IndexTweets(self, twid=None):
+        self.couch.Index('tweet', 'id')    
+
     # def ExtractAndFilter(self, user='all', filters=):
     #     pass
-    
-    # def ToString(self,a):
-    #     import collections
-    #     res = ''
-    #     if isinstance(a, collections.Iterable):
-    #         for item in a:
-    #             res +=  str(self.ToString(item)) + '\n'
-    #     else:
-    #         res = str(a)
-    #     return res
         
