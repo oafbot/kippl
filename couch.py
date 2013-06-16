@@ -19,19 +19,49 @@ class Couch:
             self.db = self.server[self.dbname]
         
     def Update(self, data):
-        dump = []
-        for d in data:
-            dump.append(d.AsDict())
+        if type(data) is list:
+            dump = data
+        else:
+            dump=[data]        
         self.db.update(dump, all_or_nothing=True)
-        # json_data=json.dumps(data, default=lambda o: o.__dict__)
         
-    def Index(self, index, path):
+    def Alias(self, index, path):
         key = "".join(["['"+obj+"']" for obj in path.split(".")])
         mapper = 'def '+index+'(doc): yield (doc'+key+', doc)'
         view = ViewDefinition('index', index, mapper, language='python')
         view.sync(self.db)
+    
+    def Index(self, index):
+        if type(index) is list:
+            name = ""
+            name += "_and_".join(["_".join([obj for obj in i.split(".")]) for i in index])
+            mapper = 'def '+name+'(doc): yield (['+",".join(["doc"+"".join(["['"+obj+"']" 
+                         for obj in i.split(".")]) for i in index])+'] , doc)'
+        else:
+            name = str("_".join([obj for obj in index.split(".")]))
+            key = "".join(["['"+obj+"']" for obj in index.split(".")])
+            mapper = 'def '+name+'(doc): yield (doc'+key+', doc)'
+        
+        view = ViewDefinition('index', name, mapper, language='python')
+        view.sync(self.db)
+        return name
+    
+    def IndexDate(self, index):        
+        name = str("_".join([obj for obj in index.split(".")]))
+        key = "".join(["['"+obj+"']" for obj in index.split(".")])
+        date  = 'datetime.timetuple(parse(doc'+key+'))[:-3]'
+        epoch = 'calendar.timegm('+date+')'
+        # mapper = 'def '+name+'(doc): yield (['+epoch+','+date+'], doc)'
+        mapper = 'def '+name+'''(doc): 
+                  from dateutil.parser import parse
+                  from datetime import datetime
+                  import calendar
+                  yield (['''+epoch+', list('+date+')], doc)'
+        view = ViewDefinition('index', name, mapper, language='python')
+        view.sync(self.db)
 
-    def SelectIndex(self, index, **kwargs):
+        
+    def GetIndex(self, index, **kwargs):
         """ 
         kwargs are as follows:
         descending:     If true, return documents in descending key order.
@@ -50,27 +80,23 @@ class Couch:
         startkey_docid: Return records starting with the specified document ID.
         update_seq:     If true, include the update sequence in the generated results.
         """
+        select = kwargs.pop('select') if 'select' in kwargs else None
         try:
-            result = [t.value for t in self.db.view('index/'+index, **kwargs)]
+            if not select or select == "*":
+                result = [t.value for t in self.db.view('index/'+index, **kwargs)]
+            else:
+                if type(select) is list:
+                    keys = ["".join(["['"+obj+"']" for obj in s.split(".")]) for s in select]
+                else:
+                    keys = ["".join(["['"+obj+"']" for obj in select.split(".")])]
+                result = [[eval('t.value'+key) for key in keys] for t in self.db.view('index/'+index, **kwargs)]
         except IndexError, e:
             result = []
         return result
         
     def Select(self, index, **kwargs):
-        if type(index) is list:
-            name = ""
-            name += "_and_".join(["_".join([obj for obj in i.split(".")]) for i in index])
-            mapper = 'def '+name+'(doc): yield (['+",".join(["doc"+"".join(["['"+obj+"']" 
-                         for obj in i.split(".")]) for i in index])+'] , doc)'
-        else:
-            name = str("_".join([obj for obj in index.split(".")]))
-            key = "".join(["['"+obj+"']" for obj in index.split(".")])
-            mapper = 'def '+name+'(doc): yield (doc'+key+', doc)'
-        
-        view = ViewDefinition('index', name, mapper, language='python')
-        view.sync(self.db)
-        
-        return self.SelectIndex(name, **kwargs)
+        name = self.Index(index)
+        return self.GetIndex(name, **kwargs)
     
     def Distinct(self, index, **kwargs):
         name = "distinct_"+str("_".join([obj for obj in index.split(".")]))
@@ -91,8 +117,8 @@ class Couch:
     def Avg(self, index, **kwargs):
         pass
         
-    def Max(self, index, path=None):
-        key = "".join(["['"+obj+"']" for obj in path.split(".")])
+    def Max(self, index):
+        key = "".join(["['"+obj+"']" for obj in index.split(".")])
         mapper = 'def max_'+index+'(doc): yield (None, doc'+key+')'
         
         def max_reduce(keys, values, rereduce):
@@ -105,8 +131,8 @@ class Couch:
         except IndexError, e:
             return 0
     
-    def Min(self, index, path=None):
-        key = "".join(["['"+obj+"']" for obj in path.split(".")])
+    def Min(self, index):
+        key = "".join(["['"+obj+"']" for obj in index.split(".")])
         mapper = 'def min_'+index+'(doc): yield (None, doc'+key+')'
 
         def min_reduce(keys, values, rereduce):

@@ -22,10 +22,10 @@ if __name__ == "__main__":
         access_token_secret=config.access_token_secret)
     
     """Initialize keywords and search."""
-    keywords = Keywords()
+    # keywords = Keywords()
     # SearchTwitterREST(keywords, bot)
-    # SearchTwitterStream(keywords.allwords)    
+    # SearchTwitterStream(keywords=keywords.allwords)    
     # bot.GetFriends("oafbot")
-    
-    from test import Test
-    test=Test(bot)
+    SearchTwitterStream(keywords=['japan'], db="japan")
+    # from test import Test
+    # test=Test(bot)
