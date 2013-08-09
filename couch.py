@@ -2,6 +2,7 @@ import couchdb
 import json
 import sys
 import time
+import hashlib
 from couchdb.design import ViewDefinition
 from inputs.config import Config
 
@@ -10,7 +11,7 @@ class Couch:
         self.config = Config()
         self.user = user if user else self.config.user
         self.server = couchdb.Server(self.config.couchdb_host)
-        self.dbname = db if db else "db_"+str(time.time())
+        self.dbname = db if db else "db_"+hashlib.sha224(str(time.time())).hexdigest()
         
         try:
             self.db = self.server.create(self.dbname)
@@ -59,7 +60,7 @@ class Couch:
                   yield (['''+epoch+', list('+date+')], doc)'
         view = ViewDefinition('index', name, mapper, language='python')
         view.sync(self.db)
-
+        return name
         
     def GetIndex(self, index, **kwargs):
         """ 
@@ -144,6 +145,25 @@ class Couch:
             return [twid for twid in self.db.view('index/min_'+index)][0].value
         except IndexError, e:
             return 0                
+    
+    def Dump(self, index, **kwargs):
+        if type(index) is list:
+            pass
+            # name = ""
+            # name += "_and_".join(["_".join([obj for obj in i.split(".")]) for i in index])
+            # mapper = 'def dump_'+name+'(doc): yield (['+",".join(["doc"+"".join(["['"+obj+"']" 
+            #              for obj in i.split(".")]) for i in index])+'] , doc)'
+        else:
+            # keystring = str(key) if key else ""
+            name = str("_".join([obj for obj in index.split(".")]))
+            k = "".join(["['"+obj+"']" for obj in index.split(".")])
+            mapper  = 'def dump_'+name+'(doc): yield (None, doc'+k+')'
+            reducer = 'def reduce_dump(keys, values): return "\n".join(values)'
+        
+        view = ViewDefinition('index', name, mapper, reducer, language='python')
+        view.sync(self.db)
+        return name
+    
         
     def DumpTweets(self, user='all', retweets=False, mentions=False):
         def tweets_text_dump(doc):

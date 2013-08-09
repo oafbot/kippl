@@ -24,6 +24,32 @@ class LanguageKit:
         self.vocab = self.fdist.keys()
         self.hapaxes = self.fdist.hapaxes()
         return self.fdist
+
+    def Collocations(self, words):
+        # from nltk import bigrams
+        import nltk.collocations
+        import nltk.corpus
+        import collections
+
+        bgm    = nltk.collocations.BigramAssocMeasures()
+        finder = nltk.collocations.BigramCollocationFinder.from_words(words)
+        scored = finder.score_ngrams( bgm.likelihood_ratio  )
+
+        # Group bigrams by first word in bigram.                                        
+        prefix_keys = collections.defaultdict(list)
+        for key, scores in scored:
+           prefix_keys[key[0]].append((key[1], scores))
+
+        # Sort keyed bigrams by strongest association.                                  
+        for key in prefix_keys:
+           prefix_keys[key].sort(key = lambda x: -x[1])
+        
+        return prefix_keys
+        
+        # print 'doctor', prefix_keys['doctor'][:5]
+        # print 'baseball', prefix_keys['baseball'][:5]
+        # print 'happy', prefix_keys['happy'][:5]
+
     
     def FilterMentions(self, text):
         import re
@@ -38,14 +64,23 @@ class LanguageKit:
         text = re.sub('^[a-zA-Z0-9\-\.]+\.(com|org|net|mil|edu|COM|ORG|NET|MIL|EDU)$',"", text)
         return text
     
+    def isRetweet(self, tweet):
+        import re
+        return True if re.match('^RT', tweet) else False
+    
     def FilterRetweets(self, tweet):
         import re
-        return True if re.match('^RT', tweet) else False            
+        return "" if re.match('^RT', tweet) else tweet
     
-    def FilterStopwords(self, words):
+    def FilterFdistStopwords(self, words):
         filtered = dict([(word, words[word]) for word in words 
                         if word not in self.stopset and word not in self.common])
         return sorted(filtered.items(), key=lambda x: x[1], reverse=True)
+
+    def FilterStopwords(self, words):
+        filtered = [word for word in words 
+                        if word not in self.stopset and word not in self.common]
+        return filtered
     
     def FilterWordLength(self, length, words):
         longer = [w for w in words if len(w[0]) > length]
