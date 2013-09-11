@@ -9,11 +9,11 @@ class Mongo:
         # self.db = self.client.(db)
         # self.db = getattr(self.client, db)
         self.db = self.client.japan
-        
+    
     def Update(self, data, collection=None):
         collection = "posts" if not collection else collection
         self.Insert(data, collection)
-        
+    
     def Insert(self, object, name):
         import numpy, decimal
         
@@ -30,23 +30,33 @@ class Mongo:
     def Select(select=None, where=None, exclude=None, limit=None):
         pass
     
-    def Count():
+    def Count(self):
         pass
     
-    def Distinct():
+    def Distinct(self):
         pass
     
-    def Min():
+    def Min(self):
         pass
     
-    def Max():
+    def Max(self):
         pass
     
-    def Avg():
+    def Avg(self):
         pass
     
-    def Sum():
+    def Sum(self):
         pass
-        
-    def Dump():
+    
+    def Dump(self):
         pass
+    
+    def DateTime(self, timestamp):
+        import time
+        return time.strftime('%Y-%m-%d %H:%M:%S', time.strptime(timestamp,'%a %b %d %H:%M:%S +0000 %Y'))
+    
+    def TimeStamp(self, dt):
+        import time
+        return time.strptime(dt,'%a %b %d %H:%M:%S +0000 %Y')
+    
+    

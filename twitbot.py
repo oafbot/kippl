@@ -14,7 +14,7 @@ class TwitBot:
     
     def Post(self, content):
         status = self.api.PostUpdate(content)
-
+    
     def Timeline(self, user, since=None, maxid=None, count=None):
         timeline = self.api.GetUserTimeline(screen_name=user, since_id=since, max_id=maxid, count=count)
         return timeline
@@ -29,7 +29,7 @@ class TwitBot:
                 not_end_of_time=False
             results += timeline
         return results
-        
+    
     def History(self, user):
         maxid = None
         results = []
@@ -44,17 +44,14 @@ class TwitBot:
             else:
                 more=False
         return results
-        
-    def Search(self, term=None, since_id=None, max_id=None, until=None, 
-               count=15, page=1, lang=None, geocode=None):
+    
+    def Search(self, term=None, since_id=None, max_id=None, until=None, count=15, page=1, lang=None, geocode=None):
         results=[]
         pages=15
-        
         for page in range(1, pages+1):
-            next = self.api.GetSearch(term=term, count=count, until=until, 
-                                      since_id=since_id, max_id=max_id, include_entities=True)
+            next = self.api.GetSearch(term=term, count=count, until=until, since_id=since_id,
+                                      max_id=max_id, include_entities=True)
             # print "tweets:", len(next), "\tpage:", page
-            
             if(len(next)>80):
                 results += next
             else:
@@ -76,7 +73,7 @@ class TwitBot:
                 results += next
                 break;
         return results
-        
+    
     def GetFriends(self, username, max_ids=100):
         import functools
         if not username: username = self.user
@@ -97,11 +94,11 @@ class TwitBot:
             if len(ids) >= max_ids:
                 break
         print ids
-        
+    
     def GetFollowers():
         import functools
         
-        
+    
     def HandleError(self, e, wait=2):
         if wait > 3600:
             print >> sys.stderr, "Too many retries. Exiting."
@@ -130,7 +127,7 @@ class TwitBot:
         else:
             print dir(e)
             raise e
-        
+    
     def Request(self, func, max_error=3, *args, **kwArgs):
         wait=2
         error_count=0
@@ -168,13 +165,13 @@ class TwitBot:
     def Unserialize(self, path):
         import cPickle as pickle
         return pickle.load( open( path, "rb" ) )
-        
+    
     def SaveTweetIds(self, object):
         self.Serialize(object, "inputs/latest_tweets.p")
-
+    
     def LoadTweetIds(self):
         return self.Unserialize("inputs/latest_tweets.p")
-
+    
     def GetListMembers(self, list_slug, owner_id, cursor=-1):
         # mostly copied from the GetFriends method in
         # https://github.com/bear/python-twitter/blob/master/twitter.py
@@ -183,3 +180,4 @@ class TwitBot:
         json = bot.api._FetchUrl(url, parameters=parameters)
         data = bot.api._ParseAndCheckTwitter(json)
         return [twitter.User.NewFromJsonDict(x) for x in data['users']]
+    

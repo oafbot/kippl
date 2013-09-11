@@ -4,17 +4,16 @@ import os, os.path
 class SearchTwitterREST:
     def __init__(self, keywords, bot):
         self.bookmarks = {}
-
+        
         if not os.path.isfile("outputs/tweets.csv"):
             self.csv = "Id,Username,Keyword,Content,Timestamp,RTs,Favorites,ReplyTo,Hastags,Urls\n"
         else:
             self.csv = "" 
-
+        
         f = open("outputs/tweets.csv", "ab+")
         self.Search(keywords, bot, f)
-
-
-    def Search(self, keywords, bot, f):   
+    
+    def Search(self, keywords, bot, f):
         for terms in keywords.GetKeywords():
             for term in terms:
                 import os.path
@@ -63,3 +62,4 @@ class SearchTwitterREST:
                 self.csv = ""
         bot.SaveTweetIds(self.bookmarks)
         f.close()
+    

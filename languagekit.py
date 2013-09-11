@@ -2,21 +2,23 @@ import nltk
 from inputs.dicts import Keywords
 
 class LanguageKit:
-    def __init__(self):
-        keywords = Keywords()
+    def __init__(self, keywords=Keywords()):
         self.stopset = set(nltk.corpus.stopwords.words('english'))
         self.tokens = []
-        self.common = keywords.common
+        self.common = keywords.common + keywords.common2
         self.positive = keywords.positive
         self.negative = keywords.negative
-                                                 
+        self.keywords = keywords.keywords
+    
     def Tokenize(self, txt):
         tokenizer = nltk.tokenize.RegexpTokenizer("[\w']+")
         #tokens = nltk.word_tokenize(txt) # tokenize text
+        txt = self.StripHtml(txt)
         for word in tokenizer.tokenize(txt):
             word = word.lower()
-            # if word.isalpha(): # drop all non-words
-            self.tokens.append(word)
+            if word.isalpha(): # drop all non-words
+                word = nltk.WordNetLemmatizer().lemmatize(word)
+                self.tokens.append(word)
         return self.tokens
     
     def Frequency(self, words):
@@ -24,7 +26,7 @@ class LanguageKit:
         self.vocab = self.fdist.keys()
         self.hapaxes = self.fdist.hapaxes()
         return self.fdist
-
+    
     def Collocations(self, words):
         # from nltk import bigrams
         import nltk.collocations
@@ -49,17 +51,33 @@ class LanguageKit:
         # print 'doctor', prefix_keys['doctor'][:5]
         # print 'baseball', prefix_keys['baseball'][:5]
         # print 'happy', prefix_keys['happy'][:5]
-
+    
+    def CollocationPairs(self, words):
+        colloc = self.Collocations(words)
+        ngrams = []
+        for c in colloc:
+            for w in colloc[c]:
+                if w: ngrams.append((c, w[0]))
+        return ngrams
+    
+    def StripHtml(self, text):
+        import lxml.html
+        try:
+            text = lxml.html.tostring(text)
+        except:
+            text = text.replace("&amp;", "&")
+        return text
     
     def FilterMentions(self, text):
         import re
         text = re.sub('@([A-Za-z0-9_]+)', "", text)
         text = re.sub('/@(\w+)\s\b/i', "", text)
         return text
-        
+    
     def FilterLinks(self, text):
         import re
         text = re.sub('http://',"", text)
+        text = re.sub('http',"", text)
         text = re.sub('t.co/.*', "", text)
         text = re.sub('^[a-zA-Z0-9\-\.]+\.(com|org|net|mil|edu|COM|ORG|NET|MIL|EDU)$',"", text)
         return text
@@ -74,22 +92,30 @@ class LanguageKit:
     
     def FilterFdistStopwords(self, words):
         filtered = dict([(word, words[word]) for word in words 
-                        if word not in self.stopset and word not in self.common])
+                        if word not in self.stopset and word not in self.common
+                        and word not in self.keywords])
         return sorted(filtered.items(), key=lambda x: x[1], reverse=True)
-
+    
+    def FilterKeywords(self, words):
+        filtered = [word for word in words if word not in self.keywords]
+        return filtered
+    
     def FilterStopwords(self, words):
-        filtered = [word for word in words 
-                        if word not in self.stopset and word not in self.common]
+        filtered = [word for word in words if word not in self.stopset and word]
+        return filtered
+    
+    def FilterCommon(self, words):
+        filtered = [word for word in words if word not in self.common and word]
         return filtered
     
     def FilterWordLength(self, length, words):
-        longer = [w for w in words if len(w[0]) > length]
-        longer = [(w[0].lower(), w[1] ) for w in longer]
+        longer = [w for w in words if len(w) > length]
+        # longer = [(w[0].lower(), w[1] ) for w in longer]
         return longer
     
     def FilterHapaxes(self, words):
         return [w for w in words if w[0] not in self.hapaxes]
-        
+    
     def Intersection(self, a, b):
         intersection=[]
         for tup1 in a:
@@ -97,7 +123,7 @@ class LanguageKit:
                 if tup1[0] in tup2:
                     intersection.append(tup1[0])
         return list(set(intersection))
-
+    
     def Difference(self, words, intersection):
         difference=[]
         for tup in words:
@@ -105,6 +131,7 @@ class LanguageKit:
                 difference.append(tup)
         return list(set(difference))
         # for t in sorted(diff1): print t[0], ':', t[1]
-        
+    
     def LoadFile(self, path, file):
         return nltk.corpus.PlaintextCorpusReader(path, file)
+    

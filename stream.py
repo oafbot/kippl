@@ -5,3 +5,4 @@ class SearchTwitterStream:
         path="outputs/"+csv if csv else None
         self.stream = TwitStream()
         self.stream.Filter(follow=follow,track=keywords,path=path,db=db)
+    

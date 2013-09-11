@@ -10,8 +10,7 @@ from stream import SearchTwitterStream
 if __name__ == "__main__":
     dirname = os.path.dirname(os.path.abspath(__file__))
     os.chdir(dirname)
-    """Handle command line args."""
-        
+    
     """Initialize Twitter bot."""
     config = Config()
     bot = TwitBot(
@@ -21,11 +20,10 @@ if __name__ == "__main__":
         access_token_key=config.access_token_key,
         access_token_secret=config.access_token_secret)
     
+    """Handle command line args."""
+    db = sys.argv[1]  if len(sys.argv)>1 else config.db
+    kw = sys.argv[2:] if len(sys.argv)>2 else [db]
+    
     """Initialize keywords and search."""
-    # keywords = Keywords()
-    # SearchTwitterREST(keywords, bot)
-    # SearchTwitterStream(keywords=keywords.allwords)    
-    # bot.GetFriends("oafbot")
-    SearchTwitterStream(keywords=['japan'], db="japan")
-    # from test import Test
-    # test=Test(bot)
+    k = Keywords(keywords=kw).keywords
+    SearchTwitterStream(keywords=k, db=db)
