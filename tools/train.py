@@ -3,7 +3,7 @@ dirname = os.path.dirname(os.path.abspath(__file__))
 os.chdir(dirname)
 
 sys.path.append( '../' )
-from potency import Potency
+from lang.potency import Potency
 
 train1 = pickle.load(open('../outputs/trainset-0-99.pk'))
 train2 = pickle.load(open('../outputs/trainset-100-200.pk'))

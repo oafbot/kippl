@@ -4,22 +4,26 @@ from inputs.dicts import Keywords
 class LanguageKit:
     def __init__(self, keywords=Keywords()):
         self.stopset = set(nltk.corpus.stopwords.words('english'))
-        self.tokens = []
-        self.common = keywords.common + keywords.common2
+        self.common  = keywords.common + keywords.common2
         self.positive = keywords.positive
         self.negative = keywords.negative
         self.keywords = keywords.keywords
+        self.spamlist = keywords.spamlist
+    
+    def LoadFile(self, path, file):
+        return nltk.corpus.PlaintextCorpusReader(path, file)
     
     def Tokenize(self, txt):
         tokenizer = nltk.tokenize.RegexpTokenizer("[\w']+")
         #tokens = nltk.word_tokenize(txt) # tokenize text
+        tokens = []
         txt = self.StripHtml(txt)
         for word in tokenizer.tokenize(txt):
             word = word.lower()
             if word.isalpha(): # drop all non-words
                 word = nltk.WordNetLemmatizer().lemmatize(word)
-                self.tokens.append(word)
-        return self.tokens
+                tokens.append(word)
+        return tokens
     
     def Frequency(self, words):
         self.fdist = nltk.FreqDist(words)
@@ -116,6 +120,18 @@ class LanguageKit:
     def FilterHapaxes(self, words):
         return [w for w in words if w[0] not in self.hapaxes]
     
+    def FilterRedundant(self, docs):
+        pass
+    
+    def FilterSpam(self, doclist):
+        return [doc for doc in doclist for spam in self.spamlist if spam not in doc]
+    
+    def FilterPositive(self, tokens):
+        return [word for word in tokens if word not in self.positive]
+    
+    def FilterNegative(self, tokens):
+        return [word for word in tokens if word not in self.negative]
+    
     def Intersection(self, a, b):
         intersection=[]
         for tup1 in a:
@@ -132,6 +148,23 @@ class LanguageKit:
         return list(set(difference))
         # for t in sorted(diff1): print t[0], ':', t[1]
     
-    def LoadFile(self, path, file):
-        return nltk.corpus.PlaintextCorpusReader(path, file)
+    def Postag(self, text):
+        sentences = nltk.sent_tokenize(text)
+        sentences = [nltk.word_tokenize(sent) for sent in sentences]
+        sentences = [nltk.pos_tag(sent) for sent in sentences]
+        return sentences
+    
+    def Chunker(self, text):
+        sents = self.Postag(text)
+        # grammar = "NP: {<DT>?<JJ>*<NN>}"
+        grammar = """NP: {<DT>? <JJ>* <NN>*} # NP 
+        P: {<IN>}           # Preposition
+        V: {<V.*>}          # Verb
+        PP: {<P> <NP>}      # PP -> P NP
+        VP: {<V> <NP|PP>*}  # VP -> V (NP|PP)*
+        """
+        cp = nltk.RegexpParser(grammar)
+        # sents = [x for x in sents if x]
+        return [cp.parse(s) for s in sents if s]
+        # result.draw()
     

@@ -28,6 +28,7 @@ class Mongo:
             post_id = posts.insert(post)
     
     def Select(select=None, where=None, exclude=None, limit=None):
+        # self.db["posts"].find({"lang":"en", 'timestamp':{"$gte": self.start, "$lt": self.end}}, {"text":1,"_id":0})]
         pass
     
     def Count(self):

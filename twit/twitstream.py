@@ -5,7 +5,6 @@ import json
 from inputs.config import Config
 from twitbot import TwitBot
 
-
 class TwitStream:
     def __init__(self):
         self.config = Config()
@@ -42,7 +41,7 @@ class StreamListener(tweepy.StreamListener):
             self.file = open(self.csv, "ab+")
     
     def setdb(self):
-        from mongo import Mongo
+        from db.mongo import Mongo
         self.db = Mongo(db=self.dbname)
     
     def writestream(self,status):

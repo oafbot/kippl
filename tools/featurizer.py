@@ -5,7 +5,7 @@ os.chdir(dirname)
 
 sys.path.append( '../' )
 from mongo import Mongo
-from languagekit import LanguageKit
+from lang.languagekit import LanguageKit
 from inputs.dicts import Keywords
 
 fd = sys.stdin.fileno()
