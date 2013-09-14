@@ -25,30 +25,22 @@ class Analysis:
         self.docs  = list(set(filter(None, self.docs)))
         self.frequency = []
         self.scores    = []
-        self.output    = Output()
         self.trace     = Config().out
+        self.output    = Output(self.trace)
         self.multicore = Multicore()
     
     def TFIDF(self, cores=mp.cpu_count()):
         termf = TermFrequency(self.docs, lang=self.lang)
-        
-        if self.trace:
-            print "\ncalculating tfidf..."
-            self.output.status_start("Processed")
-        
         self.frequency = self.multicore.run(func=self.ProcessTFIDF, tasks=self.docs, args=(termf,))
-        
-        if self.trace: 
-            self.output.status_end("Processed")
         return self.frequency
     
     def ProcessTFIDF(self, termf, queue=None, pid=None, tasks=None):
         frequency = []
-        count = 0.0        
+        if pid==0:
+            self.output.statusbar(len(tasks), title="calculating tfidf...")
         for tweet in tasks:
-            if pid==0 and self.trace:
-                self.output.statusbar(count, len(tasks), "Processed")
-                count += 1.00
+            if pid==0:
+                self.output.on_status()
             row = {'analysis_text': tweet.replace("\n", " ")}
             text = self.lang.FilterMentions(tweet)
             text = self.lang.FilterLinks(text)
@@ -57,16 +49,10 @@ class Analysis:
         queue.put(frequency)
     
     def Score(self):
-        if self.trace: 
-            print"calculating scores..."
-            self.output.status_start("Processed")
-            count = 0.0
+        self.output.statusbar(len(self.frequency), title="calculating scores...")
         
         for tweet in self.frequency:
-            if self.trace:
-                self.output.statusbar(count, len(self.frequency), "Processed")
-                count += 1
-            
+            self.output.on_status()
             row = namedtuple('tweet', 'score')
             row.tweet = tweet['analysis_text']
             row.score = 0
@@ -74,24 +60,18 @@ class Analysis:
                 if w != 'analysis_text':
                     if w in self.kwds.negative:
                         if "no " + w in tweet['analysis_text'] or "not " + w in tweet['analysis_text']:
-                           # print "actually pos"
-                           row.score += tweet[w]*10
+                           row.score += tweet[w]*10 # actually pos
                         else:
                            row.score += tweet[w]*-10
                     elif w in self.kwds.positive:
                         if "no " + w in tweet['analysis_text'] or "not " + w in tweet['analysis_text']:
-                            # print "actually neg"
-                            row.score += tweet[w]*-10
+                            row.score += tweet[w]*-10 # actually neg
                         else:
                             row.score += tweet[w]*10
                     else:
                         row.score += tweet[w]*0.1
             self.scores.append(row)
-        
         self.scores = sorted(self.scores, key=lambda s: s.score, reverse=True)    
-        
-        if self.trace: self.output.status_end("Processed")
-        
         return self.scores
     
     def Index(self):
@@ -152,12 +132,12 @@ class Analysis:
         return words
     
     def Chunker(self):
-        self.output.status_start(title="calculating chunks...", trace=self.trace)
+        self.output.statusbar(len(self.docs), title="calculating chunks...")
         chunks = []
         for tweet in self.docs:
             text = self.lang.FilterMentions(tweet)
             text = self.lang.FilterLinks(text)
             chunks.append(self.lang.Chunker(text))
-            self.output.statusbar(len(self.docs))
+            self.output.on_status()
         return chunks
     
