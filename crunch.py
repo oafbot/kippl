@@ -10,8 +10,8 @@ h = 0
 start = datetime(2013, 7, 27, 5)
 while start < datetime(2013, 8, 2, 8):
 
-     start = datetime(2013, 7, 27, 5) + timedelta(hours=h)
-     end   = datetime(2013, 7, 27, 5) + timedelta(hours=h+1)
+     start = start + timedelta(hours=h)
+     end   = start + timedelta(hours=h+1)
      analysis = Analysis("japan", ["japan", "japanese"], start, end)
      if analysis.docs:
          tfidf = analysis.TFIDF()
@@ -21,10 +21,10 @@ while start < datetime(2013, 8, 2, 8):
          bayes = analysis.Classifier()
          output.exec_time(timer)
          h += 1
-         rows=[{'stamp':"'"+str(start)+"'", 'jpndex':str(index[0]), 'volume':str(index[1])}]
-         Japondex().insert(table='jpndex', rows=rows)
-         rows=[{'stamp':"'"+str(start)+"'", 'term':"'"+word[0].encode("utf-8")+"'", 'frequency':str(word[1])} for word in cloud[:50]]
-         Japondex().insert(table='wordcloud',rows=rows)
+         # rows=[{'stamp':"'"+str(start)+"'", 'jpndex':str(index[0]), 'volume':str(index[1])}]
+         # Japondex().insert(table='jpndex', rows=rows)
+         # rows=[{'stamp':"'"+str(start)+"'", 'term':"'"+word[0].encode("utf-8")+"'", 'frequency':str(word[1])} for word in cloud[:50]]
+         # Japondex().insert(table='wordcloud',rows=rows)
 
 
 

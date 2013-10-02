@@ -4,7 +4,7 @@ from inputs.dicts import Keywords
 class LanguageKit:
     def __init__(self, keywords=Keywords()):
         self.stopset = set(nltk.corpus.stopwords.words('english'))
-        self.common  = keywords.common + keywords.common2
+        self.common  = keywords.common + keywords.stoptweets + keywords.common2
         self.positive = keywords.positive
         self.negative = keywords.negative
         self.keywords = keywords.keywords

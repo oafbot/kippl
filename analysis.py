@@ -128,10 +128,10 @@ class Analysis:
         if self.trace:
             print "\nWord Cloud:"
             for t in words[:50]: print t[0].encode("utf-8"), ':', t[1]
-        
-        for n, w in enumerate(words[:101]):
-            print "\n"+str(n)+":", w[0], w[1]
-            for c in colloc[w[0]][:10]: print c
+
+        # for n, w in enumerate(words[:101]):
+        #             print "\n"+str(n)+":", w[0], w[1]
+        #             for c in colloc[w[0]][:10]: print c
         return words
     
     def Chunker(self):

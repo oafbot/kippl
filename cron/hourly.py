@@ -4,6 +4,7 @@
 from datetime import timedelta, datetime
 import sys, os, os.path, pytz
 
+
 dirname = os.path.dirname(os.path.abspath(__file__))
 os.chdir(dirname)
 sys.path.append( '../' )
@@ -17,8 +18,6 @@ now    = datetime.utcnow().replace(tzinfo=pytz.utc, minute=0, second=0, microsec
 
 start = now + timedelta(hours=-1)
 end   = now 
-
-print start, end
 
 analysis = Analysis("japan", ["japan", "japanese"], start, end)
 
