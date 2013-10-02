@@ -56,6 +56,8 @@ class Potency:
         self.classifier = nltk.NaiveBayesClassifier.train(self.trainset)
         self.top = [t[1] for t in self.classifier.most_informative_features(50)]
         
+        self.assignment = [{ f[0]['word'] : self.classifier.classify(f[0])} for f in self.features]
+        
         if self.trace: 
             self.classifier.show_most_informative_features(100)
             print "accuracy:", nltk.classify.accuracy(self.classifier, self.testset)

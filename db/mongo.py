@@ -5,7 +5,9 @@ class Mongo:
     def __init__(self, user=None, db=None):
         from inputs.config import Config
         self.config = Config()
-        self.client = MongoClient()
+        self.host   = self.config.host
+        self.client = MongoClient(self.host)
+        
         # self.db = self.client.(db)
         # self.db = getattr(self.client, db)
         self.db = self.client.japan
