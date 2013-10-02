@@ -2,7 +2,7 @@
 #     __package__ = "cron"
 
 from datetime import timedelta, datetime
-import sys, os, os.path
+import sys, os, os.path, pytz
 
 dirname = os.path.dirname(os.path.abspath(__file__))
 os.chdir(dirname)
@@ -13,9 +13,12 @@ from db.jpndex import Japondex
 
 timer  = datetime.now()
 output = Output()
+now    = datetime.utcnow().replace(tzinfo=pytz.utc, minute=0, second=0, microsecond=0)
 
-start = datetime(2013, 7, 11, 22) + timedelta(hours=-1)
-end   = datetime(2013, 7, 11, 22)
+start = now + timedelta(hours=-1)
+end   = now 
+
+print start, end
 
 analysis = Analysis("japan", ["japan", "japanese"], start, end)
 
@@ -26,5 +29,7 @@ cloud = analysis.WordCloud()
 bayes = analysis.Classifier()
 
 output.exec_time(timer)
-rows={'stamp':"'"+str(start)+"'", 'jpndex':str(index[0]), 'volume':str(index[1])}
+rows=[{'stamp':"'"+str(end)+"'", 'jpndex':str(index[0]), 'volume':str(index[1])}]
 Japondex().insert(table='jpndex', rows=rows)
+rows=[{'stamp':"'"+str(end)+"'", 'term':"'"+word[0].encode("utf-8")+"'", 'frequency':str(word[1])} for word in cloud[:50]]
+Japondex().insert(table='wordcloud',rows=rows)

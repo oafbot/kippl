@@ -8,7 +8,7 @@ class Multicore:
         self.procs = {} # processes
         self.prods = {} # product returned from porcesses
     
-    def run(self, tasks=None, func=None, args=None):
+    def run(self, tasks=None, func=None, args=[]):
         for n in range(0, self.cores):
             """Split tasks according to number of cores available."""
             start = n * (len(tasks)//self.cores)

@@ -22,12 +22,16 @@ class Analysis:
                      {"lang":"en", 'timestamp':{"$gte": self.start, "$lt": self.end}}, {"text":1,"_id":0})]
         
         # Spamfilter, remove redundant
-        self.docs  = list(set(filter(None, self.docs)))
+        self.docs = list(set(filter(None, self.docs)))
+        self.docs = self.lang.FilterSpam(self.docs)
+        self.docs = self.lang.SimpleSpamFilter(self.docs)
+        
+        self.multicore = Multicore()
         self.frequency = []
         self.scores    = []
         self.trace     = Config().out
         self.output    = Output(self.trace)
-        self.multicore = Multicore()
+        
     
     def TFIDF(self, cores=mp.cpu_count()):
         termf = TermFrequency(self.docs, lang=self.lang)
@@ -112,12 +116,12 @@ class Analysis:
         
         tokens = self.lang.Tokenize(text)
         tokens = self.lang.FilterStopwords(tokens)
-        colloc = self.lang.Collocations(tokens)
+        tokens = self.lang.FilterKeywords(tokens)
+        tokens = self.lang.FilterWordLength(2,tokens)
+        colloc = self.lang.Collocations(tokens, 3)
+        self.tokens = tokens
         
-        words = self.lang.FilterKeywords(tokens)
-        words = self.lang.FilterWordLength(3,words)
-        
-        fdist = self.lang.Frequency(words)
+        fdist = self.lang.Frequency(tokens)
         fdist = self.lang.FilterFdistStopwords(fdist)
         words = self.lang.FilterHapaxes(fdist)
         
@@ -125,10 +129,9 @@ class Analysis:
             print "\nWord Cloud:"
             for t in words[:50]: print t[0].encode("utf-8"), ':', t[1]
         
-        # for n, w in enumerate(words[:101]):
-        #     print "\n"+str(n)+":", w[0], w[1]
-        #     for c in colloc[w[0]][:10]: print c
-        
+        for n, w in enumerate(words[:101]):
+            print "\n"+str(n)+":", w[0], w[1]
+            for c in colloc[w[0]][:10]: print c
         return words
     
     def Chunker(self):
@@ -141,3 +144,21 @@ class Analysis:
             self.output.on_status()
         return chunks
     
+    def TopRetweets(self, cap=10):
+        self.rts = [t["text"] for t in self.mongo.db["posts"].find(
+                     {"lang":"en", 'timestamp':{"$gte": self.start, "$lt": self.end}}, {"text":1,"_id":0}) 
+                     if self.lang.isRetweet(t["text"])]
+        counts = [(rt, self.rts.count(rt)) for rt in set(self.rts)]
+        counts = sorted(counts, key=lambda tup: tup[1], reverse=True)[0:cap]
+        for c in counts:
+            print c[1], c[0]
+    
+    def TopLocations(self):
+        from collections import Counter
+        self.timezone = [u['user']["time_zone"] for u in self.mongo.db["posts"].find({'user.time_zone':{"$ne" : ""}, 
+                        'timestamp':{"$gte": self.start, "$lt": self.end}}, {'_id':0,'user.time_zone':1})]
+        self.timezone = filter(None, self.timezone)
+        counts = Counter(self.timezone)
+        self.locations = sorted(counts.iteritems(), key=lambda x: x[1], reverse=True)
+    
+        

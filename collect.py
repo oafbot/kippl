@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/usr/bin/python
 import sys, os, os.path
 
 if __name__ == "__main__":
