@@ -124,7 +124,7 @@ class Analysis:
         self.tokens = tokens
         
         fdist = self.lang.Frequency(tokens)
-        fdist = self.lang.FilterFdistStopwords(fdist)
+        # fdist = self.lang.FilterFdistStopwords(fdist)
         words = self.lang.FilterHapaxes(fdist)
         
         if self.trace:
