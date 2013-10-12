@@ -9,7 +9,7 @@ class LanguageKit:
         self.negative = keywords.negative
         self.keywords = keywords.keywords
         self.spamlist = keywords.spamlist
-		self.stoptwit = keywords.stoptweets
+        self.stoptwit = keywords.stoptweets
         self.scanned  = []
         self.redundant= []
         self.possible_spam = []
@@ -117,10 +117,10 @@ class LanguageKit:
     def FilterStopwords(self, words):
         filtered = [word for word in words if word not in self.stopset and word]
         return filtered
-	
+    
     def FilterTwitterStopwords(self, words):
-		return [word for word in words if word not in self.stoptwit and word]	
-	
+        return [word for word in words if word not in self.stoptwit and word]   
+    
     def FilterCommon(self, words):
         filtered = [word for word in words if word not in self.common and word]
         return filtered

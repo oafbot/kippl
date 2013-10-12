@@ -116,15 +116,15 @@ class Analysis:
         
         tokens = self.lang.Tokenize(text)
         tokens = self.lang.FilterStopwords(tokens)
-		tokens = self.lang.FilterTwitterStopwords(tokens)
-		tokens = self.lang.FilterCommon(tokens)
+        tokens = self.lang.FilterTwitterStopwords(tokens)
+        tokens = self.lang.FilterCommon(tokens)
         tokens = self.lang.FilterKeywords(tokens)
         tokens = self.lang.FilterWordLength(2,tokens)
         colloc = self.lang.Collocations(tokens, 3)
         self.tokens = tokens
         
         fdist = self.lang.Frequency(tokens)
-        # fdist = self.lang.FilterFdistStopwords(fdist)
+        fdist = self.lang.FilterFdistStopwords(fdist)
         words = self.lang.FilterHapaxes(fdist)
         
         if self.trace:
