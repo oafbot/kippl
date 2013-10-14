@@ -28,7 +28,7 @@ cloud = analysis.WordCloud()
 bayes = analysis.Classifier()
 
 output.exec_time(timer)
-rows=[{'stamp':"'"+str(end)+"'", 'jpndex':str(index[0]), 'volume':str(index[1])}]
-Japondex().insert(table='jpndex', rows=rows)
-rows=[{'stamp':"'"+str(end)+"'", 'term':"'"+word[0].encode("utf-8")+"'", 'frequency':str(word[1])} for word in cloud[:50]]
-Japondex().insert(table='wordcloud',rows=rows)
+# rows=[{'stamp':"'"+str(end)[:-9]+"'", 'jpndex':str(index[0]), 'volume':str(index[1])}]
+# Japondex().insert(table='jpndex', rows=rows)
+# rows=[{'stamp':"'"+str(end)[:-9]+"'", 'term':"'"+word[0].encode("utf-8")+"'", 'frequency':str(word[1])} for word in cloud[:50]]
+# Japondex().insert(table='wordcloud',rows=rows)

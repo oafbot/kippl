@@ -78,6 +78,7 @@ class StreamListener(tweepy.StreamListener):
             
             if data.has_key('created_at'):
                 data['timestamp'] = self.db.DateTime(data['created_at'])
+                print data['timestamp']
             
             if len(self.data) < 10:
                 if data.has_key('lang'):
