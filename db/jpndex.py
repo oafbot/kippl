@@ -20,5 +20,5 @@ class Japondex:
             keys   = row.keys()
             values = [row[k] for k in keys]
             query = "INSERT INTO %s (%s) VALUES (%s)" % (table, ", ".join(keys), ", ".join(values))
-            # print query
+            print query
             self.cursor.execute(query)
