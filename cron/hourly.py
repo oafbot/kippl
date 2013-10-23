@@ -32,5 +32,5 @@ rows=[{'stamp':"'"+str(end)[:-9]+"'", 'jpndex':str(index[0]), 'volume':str(index
 Japondex().insert(table='jpndex', rows=rows)
 rows=[{'stamp':"'"+str(end)[:-9]+"'", 'term':"'"+word[0].encode("utf-8")+"'", 'frequency':str(word[1])} for word in cloud[:50]]
 Japondex().insert(table='wordcloud',rows=rows)
-rows=[{'stamp':"'"+str(end)[:-9]+"'", 'term':"'"+word[0].encode("utf-8")+"'", 'classification':word[1]} for word in bayes.top]
+rows=[{'stamp':"'"+str(end)[:-6]+"'", 'term':"'"+word[0].encode("utf-8")+"'", 'classification':"'"+word[1].encode("utf-8")+"'"} for word in bayes.top[:35]]
 Japondex().insert(table='predictors',rows=rows)
