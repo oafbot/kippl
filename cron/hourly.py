@@ -45,7 +45,7 @@ output.exec_time(timer)
 # except Exception,e:
 #     with open("../outputs/errors.log", "a+") as f: f.write(str(e))
 try:
-    rows=[{'stamp':"'"+str(end)[:-6]+"'", 'retweet':"'"+t[0].encode("utf-8")+"'", 'count':t[1]} for t in rt]
+    rows=[{'stamp':"'"+str(end)[:-6]+"'", 'retweet':"'"+t[0].encode("utf-8")+"'", 'count':str(t[1])} for t in rt]
     Japondex().insert(table='retweets',rows=rows)
 except Exception,e:
     with open("../outputs/errors.log", "a+") as f: f.write(str(e))
