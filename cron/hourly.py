@@ -26,11 +26,26 @@ score = analysis.Score()
 index = analysis.Index()
 cloud = analysis.WordCloud()
 bayes = analysis.Classifier()
+rt    = analysis.TopRetweets(cap=5)
 
 output.exec_time(timer)
-rows=[{'stamp':"'"+str(end)[:-9]+"'", 'jpndex':str(index[0]), 'volume':str(index[1])}]
-Japondex().insert(table='jpndex', rows=rows)
-rows=[{'stamp':"'"+str(end)[:-9]+"'", 'term':"'"+word[0].encode("utf-8")+"'", 'frequency':str(word[1])} for word in cloud[:50]]
-Japondex().insert(table='wordcloud',rows=rows)
-rows=[{'stamp':"'"+str(end)[:-6]+"'", 'term':"'"+word[0].encode("utf-8")+"'", 'classification':"'"+word[1].encode("utf-8")+"'"} for word in bayes.top[:35]]
-Japondex().insert(table='predictors',rows=rows)
+# try:
+#     rows=[{'stamp':"'"+str(end)[:-9]+"'", 'jpndex':str(index[0]), 'volume':str(index[1])}]
+#     Japondex().insert(table='jpndex', rows=rows)
+# except Exception,e:
+#     with open("../outputs/errors.log", "a+") as f: f.write(str(e))
+# try:
+#     rows=[{'stamp':"'"+str(end)[:-9]+"'", 'term':"'"+word[0].encode("utf-8")+"'", 'frequency':str(word[1])} for word in cloud[:50]]
+#     Japondex().insert(table='wordcloud',rows=rows)
+# except Exception,e:
+#     with open("../outputs/errors.log", "a+") as f: f.write(str(e))
+# try:
+#     rows=[{'stamp':"'"+str(end)[:-6]+"'", 'term':"'"+word[0].encode("utf-8")+"'", 'classification':"'"+word[1].encode("utf-8")+"'"} for word in bayes.top[:35]]
+#     Japondex().insert(table='predictors',rows=rows)
+# except Exception,e:
+#     with open("../outputs/errors.log", "a+") as f: f.write(str(e))
+try:
+    rows=[{'stamp':"'"+str(end)[:-6]+"'", 'retweet':"'"+t[0].encode("utf-8")+"'", 'count':t[1]} for t in rt]
+    Japondex().insert(table='retweets',rows=rows)
+except Exception,e:
+    with open("../outputs/errors.log", "a+") as f: f.write(str(e))

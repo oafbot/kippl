@@ -152,8 +152,9 @@ class Analysis:
                      if self.lang.isRetweet(t["text"])]
         counts = [(rt, self.rts.count(rt)) for rt in set(self.rts)]
         counts = sorted(counts, key=lambda tup: tup[1], reverse=True)[0:cap]
-        for c in counts:
-            print c[1], c[0]
+        return counts
+        # for c in counts:
+        #     print c[1], c[0]
     
     def TopLocations(self):
         from collections import Counter
