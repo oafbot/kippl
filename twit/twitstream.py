@@ -96,9 +96,9 @@ class StreamListener(tweepy.StreamListener):
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             print >> sys.stderr, 'Encountered Exception:', e, fname, exc_tb.tb_lineno
-            # print(exc_type, fname, exc_tb.tb_lineno)
-            # import traceback
-            # print traceback.format_exc()
+            import traceback
+            with open("../outputs/errors.log", "a+") as f: f.write(exc_type+" "+fname+" "+exc_tb.tb_lineno+"\n")
+            with open("../outputs/errors.log", "a+") as f: f.write(traceback.format_exc()+"\n")
             pass
         try:
             print "%s:\n%s\n%s%s\n" % (status.author.screen_name, status.text, status.created_at,"\n",)
