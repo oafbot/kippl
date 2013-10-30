@@ -107,6 +107,7 @@ class StreamListener(tweepy.StreamListener):
     
     def on_error(self, status_code):
         print >> sys.stderr, 'Encountered error with status code:', status_code
+        with open("../outputs/errors.log", "a+") as f: f.write(status_code +"\n")
         return True # Don't kill stream
     
     def on_timeout(self):
