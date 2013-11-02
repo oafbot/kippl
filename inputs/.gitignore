@@ -1,2 +1,4 @@
 *
 !.gitignore
+!dicts.py
+!config.default.py
