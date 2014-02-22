@@ -17,7 +17,7 @@ output = Output()
 now    = datetime.utcnow().replace(tzinfo=pytz.utc, minute=0, second=0, microsecond=0)
 
 start = now + timedelta(hours=-1)
-end   = now 
+end   = now
 
 analysis = Analysis("japan", ["japan", "japanese"], start, end)
 

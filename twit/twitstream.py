@@ -17,9 +17,8 @@ class TwitStream:
         self.stream = tweepy.streaming.Stream(self.auth, StreamListener(path=path, db=db), timeout=60)
         
         print >> sys.stderr, 'Filtering the public timeline for "%s"' % (' '.join(track))
-        
+		
         self.stream.filter(follow=follow, track=track)
-    
 
 class StreamListener(tweepy.StreamListener):
     def __init__(self, path=None, db=None):

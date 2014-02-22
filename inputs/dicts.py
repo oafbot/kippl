@@ -2233,7 +2233,7 @@ class Keywords:
         
         self.stoptweets=['please', 'follow', 'welcome', 'thank']
         
-        self.spamlist=['japanties', 'masaki yoda', 'iphone', 'zayn', 'niall', 'artpop', 'concert', 'gimpo']
+        self.spamlist=['japanties', 'masaki yoda', 'iphone', 'zayn', 'niall', 'concert', 'gimpo', 'follow', 'vintage']
         
         self.negations=['no', 'not', "don't", "isn't", "wasn't", "n't"]
         
